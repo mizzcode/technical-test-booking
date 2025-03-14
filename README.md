@@ -1,66 +1,218 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PlayStation Rental Application
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Overview
 
-## About Laravel
+A web application for PlayStation rental services that allows users to browse available consoles, select dates, make payments, The application is built with Laravel 12, Alpine.js, TailwindCss and integrates with Midtrans payment gateway.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Service Selection**: Choose between PS4 and PS5 consoles
+- **Dynamic Date Selection**: Calendar interface to pick booking dates
+- **Weekend Pricing**: Automatic price adjustment for weekend bookings (+50,000)
+- **Payment Integration**: Online payments via Midtrans
+- **Responsive Design**: Works on mobile and desktop devices
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Technology Stack
 
-## Learning Laravel
+- **Backend**: PHP 8.x, Laravel 12.x
+- **Frontend**: HTML, CSS, JavaScript, Alpine.js, Tailwind CSS
+- **Database**: MySQL
+- **Payment Gateway**: Midtrans
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Installation and Setup
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Prerequisites
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP >= 8.0
+- Composer
+- MySQL
+- Node.js and NPM
 
-## Laravel Sponsors
+### Installation Steps
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/playstation-rental.git
+   cd playstation-rental
+   ```
 
-### Premium Partners
+2. Install PHP dependencies:
+   ```bash
+   composer install
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+3. Install JavaScript dependencies:
+   ```bash
+   npm install
+   ```
 
-## Contributing
+3. Copy the environment file and configure it:
+   ```bash
+   cp .env.example .env
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+4. Generate application key:
+   ```bash
+   php artisan key:generate
+   ```
 
-## Code of Conduct
+5. Configure your database in the `.env` file:
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=your_database_name
+   DB_USERNAME=your_database_username
+   DB_PASSWORD=your_database_password
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+6. Configure Midtrans in the `.env` file:
+   ```
+   MIDTRANS_SERVER_KEY=your_server_key
+   MIDTRANS_CLIENT_KEY=your_client_key
+   MIDTRANS_IS_PRODUCTION=false
+   MIDTRANS_SANITIZE=true
+   MIDTRANS_3DS=true
+   ```
 
-## Security Vulnerabilities
+7. Run the migrations:
+   ```bash
+   php artisan migrate --seed
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+8. Run storage link for image public
+   ```bash
+   php artisan storage:link
+   ```
+
+9.  Start the development server:
+    ```bash
+    composer run dev
+    ```
+
+## Database Structure
+
+### Users Table
+```php
+Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->string('name', '50');
+    $table->string('email', '50')->unique();
+    $table->string('phone', '50');
+    $table->string('password', '100')->nullable();
+    $table->timestamps();
+});
+```
+
+### Services Table
+```php
+Schema::create('services', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->text('description')->nullable();
+    $table->timestamps();
+});
+```
+
+### Bookings Table
+```php
+Schema::create('bookings', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('user_id')->nullable();
+    $table->integer('total_price');
+    $table->enum('status', ['pending', 'paid', 'cancelled'])->default('pending');
+    $table->string('transaction_id')->nullable();
+    $table->json('payment_details')->nullable();
+    $table->timestamps();
+    $table->foreign('user_id')->references('id')->on('users');
+});
+```
+
+### Schedules Table
+```php
+Schema::create('schedules', function (Blueprint $table) {
+    $table->id();
+    $table->date('date');
+    $table->string('status', '50');
+    $table->integer('price');
+    $table->unsignedBigInteger('booking_id');
+    $table->unsignedBigInteger('service_id');
+    $table->timestamps();
+    $table->foreign('booking_id')->references('id')->on('bookings');
+    $table->foreign('service_id')->references('id')->on('services');
+});
+```
+
+## Controllers and Routes
+
+### Service Controller
+Handles the display of services and available booking slots.
+
+### Booking Controller
+Manages the booking process including checkout, payment processing, and confirmation.
+
+### Key Routes
+
+```php
+// Service Routes
+Route::get('/service/{id}', [ServiceController::class, 'getById'])->name('service.byid');
+
+// Checkout Routes
+Route::post('/checkout-payment', [BookingController::class, 'checkout'])->name('checkout');
+Route::get('/checkout-payment', [BookingController::class, 'checkoutPayment'])->name('checkout.payment');
+
+// Payment Routes
+Route::post('/pay-with-midtrans', [BookingController::class, 'payWithMidtrans'])->name('payment.midtrans');
+Route::post('/midtrans-callback', [BookingController::class, 'handleMidtransCallback'])->name('midtrans.callback');
+Route::post('/update-payment-status', [BookingController::class, 'updatePaymentStatus'])->name('payment.update-status');
+Route::get('/payment/success', [BookingController::class, 'paymentSuccess'])->name('payment.success');
+Route::get('/booking/confirmation/{id}', [BookingController::class, 'bookingConfirmation'])->name('booking.confirmation');
+```
+
+## Midtrans Payment Integration
+
+The application uses Midtrans Snap for payment processing. Key features:
+
+1. **Server-Side Integration**:
+   - Snap token generation
+   - Transaction payload preparation
+   - Callback handling
+
+2. **Client-Side Integration**:
+   - Snap.js for payment UI
+   - Payment result handling
+   - Cart clearing on successful payment
+
+3. **Payment Status Handling**:
+   - Success: Update booking status to 'paid', create schedules
+   - Pending: Show waiting status
+   - Error: Show error message with retry option
+
+## User Flow
+
+1. **Browse Services**:
+   - User selects PS4 or PS5 from the service page
+
+2. **Select Date and Time**:
+   - User picks a date from calendar
+   - Views available slots for the next 6 days
+   - Adds desired slots to cart (with weekend pricing automatically applied)
+
+3. **Checkout Process**:
+   - User reviews cart items
+   - Fills in customer details (name, phone, email)
+   - Submits payment request
+
+4. **Payment**:
+   - Midtrans payment popup appears
+   - User completes payment
+   - System processes payment result
+
+5. **Confirmation**:
+   - Successful payment: Show booking confirmation
+   - Pending payment: Show waiting message
+   - Failed payment: Show error with retry option
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+[MIT License](LICENSE) 
