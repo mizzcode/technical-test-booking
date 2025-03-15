@@ -32,8 +32,8 @@ A web application for PlayStation rental services that allows users to browse av
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/playstation-rental.git
-   cd playstation-rental
+   git clone https://github.com/mizzcode/technical-test-booking.git
+   cd technical-test-booking
    ```
 
 2. Install PHP dependencies:
