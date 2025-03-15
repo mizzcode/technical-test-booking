@@ -42,7 +42,7 @@ Alpine.store('cart', {
             year: 'numeric'      // 4-digit year (e.g., 2025)
         };
 
-        return dateObj.toLocaleDateString('id-ID', options);
+        return dateObj.toLocaleString('id-ID', options);
     },
 
     getCartCount() {
