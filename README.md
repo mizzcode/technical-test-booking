@@ -11,6 +11,7 @@ A web application for PlayStation rental services that allows users to browse av
 - **Weekend Pricing**: Automatic price adjustment for weekend bookings (+50,000)
 - **Payment Integration**: Online payments via Midtrans
 - **Responsive Design**: Works on mobile and desktop devices
+- **History and Confirmation Booking**: User can tracking the booking status and confirmation detail booking
 
 ## Technology Stack
 
