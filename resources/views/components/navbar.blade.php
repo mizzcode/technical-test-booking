@@ -4,7 +4,8 @@
             <div class="flex items-center">
                 <span class="font-bold"><a href="{{ route('service.byid', ['id' => 1]) }}">Booking PS</a></span>
             </div>
-            <div class="flex md:hidden gap-x-5">
+            <div class="flex md:hidden gap-x-5 items-center">
+                <span class="font-bold"><a href="{{ route('booking.history') }}">History</a></span>
                 <div class="relative cursor-pointer cart">
                     <img class="w-10" src="{{ asset('storage/shopping-cart.png') }}" alt="cart">
                     <span class="absolute -top-3 right-0 font-semibold text-my-red"
