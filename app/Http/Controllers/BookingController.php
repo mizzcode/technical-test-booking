@@ -254,12 +254,6 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
 
-        // Only show confirmed bookings
-        if ($booking->status !== 'paid') {
-            return redirect()->route('service.byid', ['id' => 1])
-                ->with('error', 'Booking belum dikonfirmasi atau telah dibatalkan.');
-        }
-
         // Get booking details from payment_details JSON
         $bookingDetails = json_decode($booking->payment_details, true);
         $items = $bookingDetails['items'] ?? [];
@@ -337,5 +331,111 @@ class BookingController extends Controller
         }
 
         return redirect()->route('booking.confirmation', ['id' => $bookingId]);
+    }
+
+    public function bookingHistory(Request $request)
+    {
+        // Get search parameters
+        $email = $request->input('email');
+        $transactionId = $request->input('transaction_id');
+
+        // Initialize bookings as empty collection by default
+        $bookings = collect([]);
+
+        // Only perform query if search parameters are provided
+        if ($email || $transactionId) {
+            $query = Booking::with('user');
+
+            // Filter by email if provided
+            if ($email) {
+                $query->whereHas('user', function ($q) use ($email) {
+                    $q->where('email', 'like', '%' . $email . '%');
+                });
+            }
+
+            // Filter by transaction ID if provided
+            if ($transactionId) {
+                $query->where('transaction_id', 'like', '%' . $transactionId . '%');
+            }
+
+            // Get bookings and paginate
+            $bookings = $query->latest()->paginate(10);
+        } else {
+            // Provide empty paginator when no search is performed
+            $bookings = new \Illuminate\Pagination\LengthAwarePaginator(
+                [],
+                0,
+                10,
+                1,
+                [
+                    'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+                ]
+            );
+        }
+
+        return view('bookings.history', compact('bookings', 'email', 'transactionId'));
+    }
+
+    public function resumePayment($id)
+    {
+        // Find the booking
+        $booking = Booking::findOrFail($id);
+
+        // Only proceed if booking is pending
+        if ($booking->status !== 'pending') {
+            return redirect()->route('booking.history')
+                ->with('error', 'Pembayaran hanya dapat dilanjutkan untuk booking dengan status PENDING.');
+        }
+
+        // Get booking details
+        $bookingDetails = json_decode($booking->payment_details, true);
+        $items = $bookingDetails['items'] ?? [];
+        $customer = $bookingDetails['customer'] ?? [];
+
+        // Prepare transaction details for Midtrans
+        $transactionDetails = [
+            'order_id' => $booking->transaction_id,
+            'gross_amount' => $booking->total_price,
+        ];
+
+        // Prepare customer details
+        $customerDetails = [
+            'first_name' => $customer['first_name'] ?? '',
+            'email' => $customer['email'] ?? '',
+            'phone' => $customer['phone'] ?? '',
+        ];
+
+        // Prepare item details
+        $itemDetails = [];
+        foreach ($items as $item) {
+            $itemDetails[] = [
+                'id' => $item['service_id'],
+                'price' => $item['price'],
+                'quantity' => 1,
+                'name' => $item['service'] . ' (' . $item['date'] . ')',
+            ];
+        }
+
+        // Create transaction payload
+        $transaction = [
+            'transaction_details' => $transactionDetails,
+            'customer_details' => $customerDetails,
+            'item_details' => $itemDetails,
+        ];
+
+        try {
+            // Get Snap Payment Page URL
+            $snapToken = Snap::getSnapToken($transaction);
+
+            // Store booking ID in session for future reference
+            session()->put('booking_id', $booking->id);
+
+            // Return view with Snap token
+            return view('bookings.resume-payment', compact('booking', 'snapToken', 'customer', 'items'));
+        } catch (Exception $e) {
+            Log::error('Midtrans Error: ' . $e->getMessage());
+            return redirect()->route('booking.history')
+                ->with('error', 'Terjadi kesalahan saat memproses pembayaran: ' . $e->getMessage());
+        }
     }
 }
