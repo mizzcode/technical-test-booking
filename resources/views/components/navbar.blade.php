@@ -13,6 +13,7 @@
             </div>
             <div class="hidden md:block">
                 <div class="ml-4 flex items-center md:ml-6 font-bold space-x-6">
+                    <span class="font-bold"><a href="{{ route('booking.history') }}">History</a></span>
                     <div class="relative cursor-pointer cart">
                         <img class="w-10" src="{{ asset('storage/shopping-cart.png') }}" alt="cart">
                         <span class="absolute -top-3 right-0 font-semibold text-my-red"
