@@ -11,6 +11,7 @@ A web application for PlayStation rental services that allows users to browse av
 - **Weekend Pricing**: Automatic price adjustment for weekend bookings (+50,000)
 - **Payment Integration**: Online payments via Midtrans
 - **Responsive Design**: Works on mobile and desktop devices
+- **History and Confirmation Booking**: User can tracking the booking status and confirmation detail booking
 
 ## Technology Stack
 
@@ -167,6 +168,10 @@ Route::post('/midtrans-callback', [BookingController::class, 'handleMidtransCall
 Route::post('/update-payment-status', [BookingController::class, 'updatePaymentStatus'])->name('payment.update-status');
 Route::get('/payment/success', [BookingController::class, 'paymentSuccess'])->name('payment.success');
 Route::get('/booking/confirmation/{id}', [BookingController::class, 'bookingConfirmation'])->name('booking.confirmation');
+
+// Booking History Routes
+Route::get('/booking/history', [BookingController::class, 'bookingHistory'])->name('booking.history');
+Route::get('/booking/resume-payment/{id}', [BookingController::class, 'resumePayment'])->name('booking.resume-payment');
 ```
 
 ## Midtrans Payment Integration
