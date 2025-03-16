@@ -168,6 +168,10 @@ Route::post('/midtrans-callback', [BookingController::class, 'handleMidtransCall
 Route::post('/update-payment-status', [BookingController::class, 'updatePaymentStatus'])->name('payment.update-status');
 Route::get('/payment/success', [BookingController::class, 'paymentSuccess'])->name('payment.success');
 Route::get('/booking/confirmation/{id}', [BookingController::class, 'bookingConfirmation'])->name('booking.confirmation');
+
+// Booking History Routes
+Route::get('/booking/history', [BookingController::class, 'bookingHistory'])->name('booking.history');
+Route::get('/booking/resume-payment/{id}', [BookingController::class, 'resumePayment'])->name('booking.resume-payment');
 ```
 
 ## Midtrans Payment Integration
