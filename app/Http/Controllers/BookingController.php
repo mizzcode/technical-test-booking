@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Schedule;
+use App\Models\Service;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -28,6 +29,8 @@ class BookingController extends Controller
         $parsedItems = [];
         $totalPrice = 0;
 
+        $recalculatedTotalPrice = 0;
+
         // Group items by service type
         $groupedItems = [];
 
@@ -36,12 +39,36 @@ class BookingController extends Controller
             $parsedItems[] = $parsedItem;
             $totalPrice += $parsedItem['price'];
 
-            $service = $parsedItem['service'];
-            if (!isset($groupedItems[$service])) {
-                // Determine base price based on service type
-                $basePrice = strpos($service, 'PS 4') !== false ? 30000 : 40000;
+            $service = Service::find($parsedItem['service_id']);
 
-                $groupedItems[$service] = [
+            $calculatePrice = calculatePrice($service, $parsedItem['date']);
+
+            $recalculatedTotalPrice += $calculatePrice;
+
+            if ($calculatePrice !== $parsedItem['price']) {
+                Log::warning('price manipulation detected', [
+                    'service_name' => $service->name,
+                    'correct_price' => $calculatePrice,
+                    'wrong_price' => $parsedItem['price']
+                ]);
+
+                return redirect()->back()->with('error', 'price manipulation detected');
+            }
+
+            // Check if total price matches
+            if ($totalPrice !== $recalculatedTotalPrice) {
+                Log::warning('Total price manipulation detected', [
+                    'submitted_total' => $totalPrice,
+                    'correct_total' => $recalculatedTotalPrice,
+                ]);
+
+                return redirect()->back()->with('error', 'total price manipulation detected');
+            }
+
+            if (!isset($groupedItems[$service->name])) {
+                $basePrice = $service->price;
+
+                $groupedItems[$service->name] = [
                     'items' => [],
                     'count' => 0,
                     'weekendCount' => 0,
@@ -52,21 +79,21 @@ class BookingController extends Controller
             }
 
             // Check if this is a weekend booking
-            $basePrice = $groupedItems[$service]['basePrice'];
+            $basePrice = $groupedItems[$service->name]['basePrice'];
             $weekendSurcharge = $parsedItem['price'] > $basePrice ? $parsedItem['price'] - $basePrice : 0;
 
             // Add weekend tracking
             if ($weekendSurcharge > 0) {
-                $groupedItems[$service]['weekendCount']++;
-                $groupedItems[$service]['totalWeekendSurcharge'] += $weekendSurcharge;
+                $groupedItems[$service->name]['weekendCount']++;
+                $groupedItems[$service->name]['totalWeekendSurcharge'] += $weekendSurcharge;
             }
 
             $parsedItem['weekendSurcharge'] = $weekendSurcharge;
             $parsedItem['basePrice'] = $basePrice;
 
-            $groupedItems[$service]['items'][] = $parsedItem;
-            $groupedItems[$service]['count']++;
-            $groupedItems[$service]['subtotal'] += $parsedItem['price'];
+            $groupedItems[$service->name]['items'][] = $parsedItem;
+            $groupedItems[$service->name]['count']++;
+            $groupedItems[$service->name]['subtotal'] += $parsedItem['price'];
         }
 
         session()->put('checkout_data', [
@@ -100,7 +127,8 @@ class BookingController extends Controller
     {
         // Validate the form data
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'required|email',
         ]);
@@ -108,7 +136,7 @@ class BookingController extends Controller
         // Get checkout data from session
         $checkoutData = session('checkout_data', []);
         $parsedItems = $checkoutData['parsedItems'] ?? [];
-        $totalPrice = $checkoutData['totalPrice'] ?? 0;
+        $clientTotalPrice = $checkoutData['totalPrice'] ?? 0;
 
         if (empty($parsedItems)) {
             return response()->json([
@@ -116,37 +144,114 @@ class BookingController extends Controller
             ], 400);
         }
 
-        // Find or create user based on email
+        $recalculatedTotalPrice = 0;
+        $validatedItems = [];
+
+        foreach ($parsedItems as $item) {
+            $service = Service::find($item['service_id']);
+            if (!$service) {
+                return response()->json([
+                    'error' => 'Layanan tidak valid.'
+                ], 400);
+            }
+
+            // Get base price from service table
+            $basePrice = $service->price;
+
+            // Validate that the service has a valid price
+            if (!$basePrice || $basePrice <= 0) {
+                Log::error('Invalid service price in database', [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'price from cart' => $item['price'],
+                    'price from db' => $basePrice
+                ]);
+
+                return response()->json([
+                    'error' => 'Layanan tidak memiliki harga yang valid.'
+                ], 400);
+            }
+
+            $calculatePrice = calculatePrice($service, $item['date']);
+            $weekendSurcharge = isWeekend($item['date'])
+                ? getWeekendSurcharge()
+                : 0;
+
+            // Validate that item price matches the correct calculated price
+            if ($item['price'] !== $calculatePrice) {
+                Log::warning('Price manipulation detected', [
+                    'user_email' => $validated['email'],
+                    'service' => $service->name,
+                    'date' => $item['date'],
+                    'submitted_price' => $item['price'],
+                    'correct_price' => $calculatePrice,
+                ]);
+
+                return response()->json([
+                    'error' => 'Harga tidak valid. Silakan refresh halaman dan coba lagi.'
+                ], 400);
+            }
+
+            // Add to recalculated total
+            $recalculatedTotalPrice += $calculatePrice;
+
+            // Store validated item
+            $validatedItems[] = [
+                'service_id' => $item['service_id'],
+                'service' => $service->name,
+                'date' => $item['date'],
+                'price' => $calculatePrice,
+                'basePrice' => $basePrice,
+                'weekendSurcharge' => $weekendSurcharge
+            ];
+        }
+
+        // Check if total price matches
+        if ($clientTotalPrice !== $recalculatedTotalPrice) {
+            Log::warning('Total price manipulation detected', [
+                'user_email' => $validated['email'],
+                'submitted_total' => $clientTotalPrice,
+                'correct_total' => $recalculatedTotalPrice,
+                'wrong_total' => $clientTotalPrice
+            ]);
+
+            return response()->json([
+                'error' => 'Total harga tidak valid. Silakan refresh halaman dan coba lagi.'
+            ], 400);
+        }
+
         $user = User::where('email', $validated['email'])->first();
+
+        $fullName = $validated['first_name'] . ' ' . ($validated['last_name'] ?? '');
 
         if (!$user) {
             $user = User::create([
-                'name' => $validated['name'],
+                'name' => trim($fullName),
                 'email' => $validated['email'],
                 'phone' => $validated['phone']
-                // You might want to set a default password or leave it null
             ]);
         }
 
         // Generate unique order ID
         $orderId = 'BOOKING-PS-' . time();
 
-        // Prepare transaction details for Midtrans
+        // Prepare transaction details for Midtrans using validated prices
         $transactionDetails = [
             'order_id' => $orderId,
-            'gross_amount' => $totalPrice,
+            'gross_amount' => $recalculatedTotalPrice,
         ];
 
         // Prepare customer details
         $customerDetails = [
-            'first_name' => $validated['name'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'] ?? '',
             'email' => $validated['email'],
             'phone' => $validated['phone'],
         ];
 
         // Prepare item details
         $itemDetails = [];
-        foreach ($parsedItems as $item) {
+        foreach ($validatedItems as $item) {
             $itemDetails[] = [
                 'id' => $item['service_id'],
                 'price' => $item['price'],
@@ -169,11 +274,11 @@ class BookingController extends Controller
             // Create a new booking entry with pending status
             $booking = Booking::create([
                 'user_id' => $user->id,
-                'total_price' => $totalPrice,
+                'total_price' => $recalculatedTotalPrice,
                 'status' => 'pending',
                 'transaction_id' => $orderId,
                 'payment_details' => json_encode([
-                    'items' => $parsedItems,
+                    'items' => $validatedItems,
                     'customer' => $customerDetails
                 ])
             ]);
@@ -284,7 +389,6 @@ class BookingController extends Controller
             // Update payment details
             $paymentDetails = json_decode($booking->payment_details, true) ?: [];
             $paymentDetails['client_response'] = $validated['payment_details'];
-            $paymentDetails['transaction_id'] = $validated['transaction_id'];
             $booking->payment_details = json_encode($paymentDetails);
 
             // Save the booking
@@ -391,35 +495,97 @@ class BookingController extends Controller
         $items = $bookingDetails['items'] ?? [];
         $customer = $bookingDetails['customer'] ?? [];
 
+        $recalculatedTotal = 0;
+        $validatedItems = [];
+
+        foreach ($items as $item) {
+            Log::info(['item pada resume payment: ' => $item]);
+            $service = Service::find($item['service_id']);
+            if (!$service) {
+                return redirect()->route('booking.history')
+                    ->with('error', 'Layanan tidak valid dalam booking ini.');
+            }
+
+            // Get base price from service table
+            $basePrice = $service->price;
+
+            // Validate that the service has a valid price
+            if (!$basePrice || $basePrice <= 0) {
+                Log::error('Invalid service price in database', [
+                    'booking_id' => $booking->id,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'price' => $basePrice,
+                    'wrong_price' => $item['price']
+                ]);
+
+                return redirect()->route('booking.history')
+                    ->with('error', 'Layanan tidak memiliki harga yang valid.');
+            }
+
+            // Use PriceHelper to calculate the correct price
+            $calculatePrice = calculatePrice($service, $item['date']);
+            $weekendSurcharge = isWeekend($item['date'])
+                ? getWeekendSurcharge()
+                : 0;
+
+            // Validate that item price matches the correct calculated price
+            if ($item['price'] !== $calculatePrice) {
+                Log::warning('Price manipulation detected in resume payment', [
+                    'booking_id' => $booking->id,
+                    'service' => $service->name,
+                    'date' => $item['date'],
+                    'correct_price' => $calculatePrice,
+                    'wrong_price' => $item['price']
+                ]);
+
+                return redirect()->route('booking.history')
+                    ->with('error', 'Harga dalam booking tidak valid. Silakan hubungi admin.');
+            }
+
+            // Add to recalculated total
+            $recalculatedTotal += $calculatePrice;
+
+            // Save validated item
+            $validatedItems[] = [
+                'id' => $item['service_id'],
+                'price' => $calculatePrice,
+                'quantity' => 1,
+                'name' => $service->name . ' (' . $item['date'] . ')',
+            ];
+        }
+
+        // Check if booking total price matches recalculated total
+        if ($booking->total_price !== $recalculatedTotal) {
+            Log::warning('Total price manipulation detected in resume payment', [
+                'booking_id' => $booking->id,
+                'stored_total' => $booking->total_price,
+                'correct_total' => $recalculatedTotal
+            ]);
+
+            return redirect()->route('booking.history')
+                ->with('error', 'Total harga dalam booking tidak valid. Silakan hubungi admin.');
+        }
+
         // Prepare transaction details for Midtrans
         $transactionDetails = [
             'order_id' => $booking->transaction_id,
-            'gross_amount' => $booking->total_price,
+            'gross_amount' => $recalculatedTotal,
         ];
 
         // Prepare customer details
         $customerDetails = [
             'first_name' => $customer['first_name'] ?? '',
+            'last_name' => $customer['last_name'] ?? '',
             'email' => $customer['email'] ?? '',
             'phone' => $customer['phone'] ?? '',
         ];
-
-        // Prepare item details
-        $itemDetails = [];
-        foreach ($items as $item) {
-            $itemDetails[] = [
-                'id' => $item['service_id'],
-                'price' => $item['price'],
-                'quantity' => 1,
-                'name' => $item['service'] . ' (' . $item['date'] . ')',
-            ];
-        }
 
         // Create transaction payload
         $transaction = [
             'transaction_details' => $transactionDetails,
             'customer_details' => $customerDetails,
-            'item_details' => $itemDetails,
+            'item_details' => $validatedItems,
         ];
 
         try {

@@ -8,44 +8,12 @@
 @endsection
 
 @section('content')
+    @if (session('error'))
+        @include('components.alert-error')
+    @endif
+
     <div class="mx-5 max-w-7xl sm:mx-auto max-w-max-w-6.5xl mt-24 md:mt-32">
         <h1 class="text-2xl font-bold mb-6">Riwayat Booking</h1>
-
-        @if (session('error'))
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm1-9a1 1 0 00-1 1v4a1 1 0 102 0V5a1 1 0 00-1-1z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-red-700">{{ session('error') }}</p>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        @if (session('success'))
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-green-700">{{ session('success') }}</p>
-                    </div>
-                </div>
-            </div>
-        @endif
 
         <!-- Search Form -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -62,7 +30,8 @@
                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-my-red focus:ring focus:ring-my-red focus:ring-opacity-50">
                 </div>
                 <div class="self-end">
-                    <button type="submit" class="cursor-pointer bg-my-red text-white py-2 px-4 rounded-lg hover:bg-red-800">
+                    <button type="submit"
+                        class="cursor-pointer bg-my-red text-white py-2 px-4 rounded-lg hover:bg-red-800">
                         Cari
                     </button>
                 </div>
@@ -71,7 +40,7 @@
 
         @if (request()->has('email') || request()->has('transaction_id'))
             <!-- Bookings Table -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-white rounded-lg shadow-md overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>

@@ -17,11 +17,13 @@ class ServiceSeeder extends Seeder
     Service::create([
       'name' => 'Rental PS 4',
       'description' => 'Rental PlayStation 4 per sesi',
+      'price' => 30000,
     ]);
 
     Service::create([
       'name' => 'Rental PS 5',
       'description' => 'Rental PlayStation 5 per sesi',
+      'price' => 40000,
     ]);
   }
 }
