@@ -17,12 +17,13 @@
     <script>
         // Pre-parse the JSON on the server side to avoid JS parsing issues
         const statusData = @json($status);
+        const basePrice = {{ $basePrice ?? $service->price ?? 0 }};
     </script>
 
     <div class="mx-5 mt-24 sm:mx-auto sm:max-w-6xl sm:mt-28">
         <div x-data="{
             date: '{{ date('Y-m-d') }}',
-            basePrice: Number('{{ $basePrice }}'),
+            basePrice: Number(basePrice),
             bookedDates: statusData,
             formatPrice(price) {
                 return 'Rp ' + price.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });

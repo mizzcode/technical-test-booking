@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ServiceController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -25,3 +26,10 @@ Route::get('/booking/confirmation/{id}', [BookingController::class, 'bookingConf
 // Booking History Routes
 Route::get('/booking/history', [BookingController::class, 'bookingHistory'])->name('booking.history');
 Route::get('/booking/resume-payment/{id}', [BookingController::class, 'resumePayment'])->name('booking.resume-payment');
+
+Route::get('/clear-cache', function() {
+    Artisan::call('view:clear');
+    Artisan::call('config:clear');
+    Artisan::call('optimize:clear');
+    return "Cache cleared successfully";
+});
