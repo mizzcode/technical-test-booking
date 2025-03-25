@@ -30,6 +30,6 @@ Route::get('/booking/resume-payment/{id}', [BookingController::class, 'resumePay
 Route::get('/clear-cache', function() {
     Artisan::call('view:clear');
     Artisan::call('config:clear');
-    Artisan::call('optimize:clear');
+    Artisan::call('route:clear');
     return "Cache cleared successfully";
 });
