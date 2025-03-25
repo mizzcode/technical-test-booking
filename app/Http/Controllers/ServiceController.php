@@ -14,7 +14,7 @@ class ServiceController extends Controller
     $service = Service::findOrFail($id);
 
     // Calculate base price
-    $basePrice = strtolower($service->name) == 'rental ps 4' ? 30000 : 40000;
+    $basePrice = $service->price;
 
     // Get all booked schedules for this service and transform into a simple status map
     $bookedDates = Schedule::where('service_id', $id)

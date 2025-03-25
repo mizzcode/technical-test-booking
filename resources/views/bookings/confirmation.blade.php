@@ -8,25 +8,15 @@
 @endsection
 
 @section('content')
+    @if (session('error'))
+        @include('components.alert-error')
+    @endif
+
     <div class="mx-5 max-w-7xl sm:mx-auto max-w-max-w-6.5xl mt-24 md:mt-32">
         @if ($booking->status === 'paid')
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-green-700">
-                            Pembayaran berhasil! Booking anda telah dikonfirmasi.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            @include('components.alert-success', [
+                'message' => 'Pembayaran berhasil! Booking anda telah dikonfirmasi.',
+            ])
         @endif
         <div class="flex flex-col md:flex-row md:justify-between md:space-x-5 space-y-5 md:space-y-0 mb-12">
             <div class="md:w-1/2 bg-white shadow-xl rounded-lg p-6 border-t-2 border-my-red">
@@ -35,7 +25,8 @@
 
                 <div class="mb-4">
                     <h2 class="font-semibold mb-2">Informasi Pelanggan</h2>
-                    <p><span class="font-medium">Nama:</span> {{ $customer['first_name'] ?? 'N/A' }}</p>
+                    <p><span class="font-medium">Nama:</span> {{ $customer['first_name'] ?? 'N/A' }}
+                        {{ $customer['last_name'] ?? 'N/A' }}</p>
                     <p><span class="font-medium">Email:</span> {{ $customer['email'] ?? 'N/A' }}</p>
                     <p><span class="font-medium">Telepon:</span> {{ $customer['phone'] ?? 'N/A' }}</p>
                 </div>
@@ -54,7 +45,8 @@
                                 class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">{{ strtoupper($booking->status) }}</span>
                         @endif
                     </p>
-                    <p><span class="font-medium">Tanggal Booking: {{ $booking->created_at->format('d M Y, H:i') }} WIB</span></p>
+                    <p><span class="font-medium">Tanggal Booking: {{ $booking->created_at->format('d M Y, H:i') }}
+                            WIB</span></p>
                 </div>
             </div>
 

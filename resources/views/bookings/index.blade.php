@@ -10,6 +10,10 @@
 @endsection
 
 @section('content')
+    @if (session('error'))
+        @include('components.alert-error')
+    @endif
+
     <script>
         // Pre-parse the JSON on the server side to avoid JS parsing issues
         const statusData = @json($status);

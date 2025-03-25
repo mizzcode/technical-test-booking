@@ -8,6 +8,9 @@
 @endsection
 
 @section('content')
+    @if (session('error'))
+        @include('components.alert-error')
+    @endif
     <div class="mx-5 max-w-7xl sm:mx-auto max-w-max-w-6.5xl mt-24 md:mt-32">
         <div class="flex flex-col md:flex-row md:justify-between md:space-x-5 space-y-5 md:space-y-0 mb-12">
             <div class="md:h-[35rem] md:w-7/12 ">
@@ -16,25 +19,43 @@
                     <form id="paymentForm" class="border-t border-white">
                         @csrf
                         <div class="space-y-6 border-gray-100 mt-5">
+                            <!-- Name fields in two columns -->
                             <div class="flex flex-col space-y-6 md:space-y-0 md:flex-row md:justify-between md:space-x-3">
-                                <div>
+                                <div class="w-full">
                                     <label class="mb-1.5 block text-sm font-medium">
-                                        Full Name
+                                        First Name
                                     </label>
-                                    <input type="text" placeholder="Masukan Nama Lengkap" name="name"
+                                    <input type="text" placeholder="Masukan Nama Depan" name="first_name"
                                         class="bg-white shadow-theme-xs h-11 w-full rounded-lg border-my-red border-t-2 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden" />
+                                    @error('first_name')
+                                        <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                <div x-data="{
-                                    selectedCountry: 'ID',
-                                    countryCodes: {
-                                        'ID': '+62',
-                                    },
-                                    phoneNumber: '62'
-                                }" class="md:w-2/4">
+                                <div class="w-full">
+                                    <label class="mb-1.5 block text-sm font-medium">
+                                        Last Name
+                                    </label>
+                                    <input type="text" placeholder="Masukan Nama Belakang" name="last_name"
+                                        class="bg-white shadow-theme-xs h-11 w-full rounded-lg border-my-red border-t-2 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden" />
+                                    @error('last_name')
+                                        <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col space-y-6 md:space-y-0 md:flex-row md:justify-between md:space-x-3">
+                                <!-- Phone field -->
+                                <div class="w-full">
                                     <label class="mb-1.5 block text-sm font-medium">
                                         Phone
                                     </label>
-                                    <div class="relative">
+                                    <div x-data="{
+                                        selectedCountry: 'ID',
+                                        countryCodes: {
+                                            'ID': '+62',
+                                        },
+                                        phoneNumber: '62'
+                                    }" class="relative">
                                         <div class="absolute">
                                             <select x-model="selectedCountry"
                                                 @change="phoneNumber = countryCodes[selectedCountry]"
@@ -53,25 +74,33 @@
                                         </div>
                                         <input placeholder="62" x-model="phoneNumber" type="tel" name="phone"
                                             class="bg-white shadow-theme-xs h-11 w-full rounded-lg border-my-red border-t-2 py-3 pr-4 pl-[84px] text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden" />
+                                        @error('phone')
+                                            <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium">
-                                    Email
-                                </label>
-                                <div class="relative">
-                                    <span
-                                        class="absolute top-1/2 left-0 -translate-y-1/2 border-r border-gray-200 px-3.5 py-3 text-gray-500">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                                d="M3.04175 7.06206V14.375C3.04175 14.6511 3.26561 14.875 3.54175 14.875H16.4584C16.7346 14.875 16.9584 14.6511 16.9584 14.375V7.06245L11.1443 11.1168C10.457 11.5961 9.54373 11.5961 8.85638 11.1168L3.04175 7.06206ZM16.9584 5.19262C16.9584 5.19341 16.9584 5.1942 16.9584 5.19498V5.20026C16.9572 5.22216 16.946 5.24239 16.9279 5.25501L10.2864 9.88638C10.1145 10.0062 9.8862 10.0062 9.71437 9.88638L3.07255 5.25485C3.05342 5.24151 3.04202 5.21967 3.04202 5.19636C3.042 5.15695 3.07394 5.125 3.11335 5.125H16.8871C16.9253 5.125 16.9564 5.15494 16.9584 5.19262ZM18.4584 5.21428V14.375C18.4584 15.4796 17.563 16.375 16.4584 16.375H3.54175C2.43718 16.375 1.54175 15.4796 1.54175 14.375V5.19498C1.54175 5.1852 1.54194 5.17546 1.54231 5.16577C1.55858 4.31209 2.25571 3.625 3.11335 3.625H16.8871C17.7549 3.625 18.4584 4.32843 18.4585 5.19622C18.4585 5.20225 18.4585 5.20826 18.4584 5.21428Z"
-                                                fill="#667085" />
-                                        </svg>
-                                    </span>
-                                    <input type="text" placeholder="booking-ps@gmail.com" name="email"
-                                        class="border-my-red border-t-2 bg-white shadow-theme-xs  h-11 w-full rounded-lg px-4 py-2.5 pl-[62px] text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden  " />
+
+                                <!-- Email field -->
+                                <div class="w-full">
+                                    <label class="mb-1.5 block text-sm font-medium">
+                                        Email
+                                    </label>
+                                    <div class="relative">
+                                        <span
+                                            class="absolute top-1/2 left-0 -translate-y-1/2 border-r border-gray-200 px-3.5 py-3 text-gray-500">
+                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                                    d="M3.04175 7.06206V14.375C3.04175 14.6511 3.26561 14.875 3.54175 14.875H16.4584C16.7346 14.875 16.9584 14.6511 16.9584 14.375V7.06245L11.1443 11.1168C10.457 11.5961 9.54373 11.5961 8.85638 11.1168L3.04175 7.06206ZM16.9584 5.19262C16.9584 5.19341 16.9584 5.1942 16.9584 5.19498V5.20026C16.9572 5.22216 16.946 5.24239 16.9279 5.25501L10.2864 9.88638C10.1145 10.0062 9.8862 10.0062 9.71437 9.88638L3.07255 5.25485C3.05342 5.24151 3.04202 5.21967 3.04202 5.19636C3.042 5.15695 3.07394 5.125 3.11335 5.125H16.8871C16.9253 5.125 16.9564 5.15494 16.9584 5.19262ZM18.4584 5.21428V14.375C18.4584 15.4796 17.563 16.375 16.4584 16.375H3.54175C2.43718 16.375 1.54175 15.4796 1.54175 14.375V5.19498C1.54175 5.1852 1.54194 5.17546 1.54231 5.16577C1.55858 4.31209 2.25571 3.625 3.11335 3.625H16.8871C17.7549 3.625 18.4584 4.32843 18.4585 5.19622C18.4585 5.20225 18.4585 5.20826 18.4584 5.21428Z"
+                                                    fill="#667085" />
+                                            </svg>
+                                        </span>
+                                        <input type="text" placeholder="booking-ps@gmail.com" name="email"
+                                            class="border-my-red border-t-2 bg-white shadow-theme-xs h-11 w-full rounded-lg px-4 py-2.5 pl-[62px] text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden" />
+                                        @error('email')
+                                            <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -199,11 +228,12 @@
             let contentArea = document.querySelector('.mx-5.max-w-7xl');
 
             payButton.addEventListener('click', function() {
-                const name = document.querySelector('input[name="name"]').value;
+                const firstName = document.querySelector('input[name="first_name"]').value;
+                const lastName = document.querySelector('input[name="last_name"]').value;
                 const phone = document.querySelector('input[name="phone"]').value;
                 const email = document.querySelector('input[name="email"]').value;
 
-                if (!name || !phone || !email) {
+                if (!firstName || !phone || !email) {
                     alert('Silakan lengkapi data customer.');
                     return;
                 }
@@ -225,7 +255,8 @@
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
-                            name: name,
+                            first_name: firstName,
+                            last_name: lastName || '',
                             phone: phone,
                             email: email
                         })
@@ -273,7 +304,8 @@
                                                     bookingId;
                                             } else {
                                                 alert(
-                                                    'Pembayaran berhasil, tetapi gagal memperbarui status. Mohon hubungi admin.');
+                                                    'Pembayaran berhasil, tetapi gagal memperbarui status. Mohon hubungi admin.'
+                                                );
                                                 window.location.href =
                                                     '{{ route('payment.success') }}?booking_id=' +
                                                     bookingId;
@@ -355,7 +387,8 @@
 
                                     // Optionally show a message
                                     alert(
-                                        'Pembayaran dibatalkan. Silakan coba lagi ketika Anda siap.');
+                                        'Pembayaran dibatalkan. Silakan coba lagi ketika Anda siap.'
+                                    );
                                 }
                             });
                         } else {
